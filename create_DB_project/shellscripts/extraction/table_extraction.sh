@@ -2,7 +2,7 @@
 
 PSQL_COMMAND="psql"
 
-source "$(dirname "$0")/config/config_env.sh"
+source "$(dirname "$-1")/config/config_env.sh"
 
 #Definimos otros comando psql
 PSQL_PATH_DUMP_COMMAND=$(echo "$PSQL_PATH" | sed 's|psql|pg_dump|')
@@ -17,6 +17,8 @@ DB_NAME=${PGDB_NAME:-$DB_NAME}
 DB_SCHEMA=${PGSCHEMA:-$DB_SCHEMA}
 
 echo "ℹ️ Usando conexión: host=$DB_HOST port=$DB_PORT user=$DB_USER db=$DB_NAME"
+
+#Acá comienza el código
 
 TABLES=$(PGPASSWORD="$DB_PASSWORD" "$PSQL_PATH" \
     -h "$DB_HOST" \
@@ -42,8 +44,6 @@ for table in $TABLES; do
     touch "$TABLES_PATH/$TABLENAME.sql"
 
     #Escritura del script para crear la tabla en BD
-    echo "--Table creation--\n\n" >> $TABLES_PATH/$TABLENAME.sql
-
     PGPASSWORD="$DB_PASSWORD" "$PSQL_PATH_DUMP_COMMAND" \
                     -h "$DB_HOST" \
                     -p "$DB_PORT" \
