@@ -1,25 +1,24 @@
 #!/bin/bash
 
-source "$(dirname "$-1")/config/config_env.sh"
-source "$(dirname "$-1")/extraction/util/type_convertion.sh"
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+#source "$(dirname "$-1")/config/config_env.sh"
+source "$BASE_DIR/extraction/util/type_convertion.sh"
 
 
 #Definimos otros comando psql
 PSQL_PATH_DUMP_COMMAND=$(echo "$PSQL_PATH" | sed 's|psql|pg_dump|')
 
 # Usar variables de Bitbucket Pipelines si están disponibles
-DB_USER=${PGUSER:-$DB_USER}
-DB_PASSWORD=${PGPASSWORD:-$DB_PASSWORD}
-DB_HOST=${PGHOST:-$DB_HOST}
-DB_PORT=${PGPORT:-$DB_PORT}
+DB_USER=${PGUSER:-""}
+DB_PASSWORD=${PGPASSWORD:-""}
+DB_HOST=${PGHOST:-""}
+DB_PORT=${PGPORT:-""}
 
-DB_NAME=${PGDB_NAME:-$DB_NAME}
-DB_SCHEMA=${PGSCHEMA:-$DB_SCHEMA}
-
-echo -e "ℹ️ Usando conexión: host=$DB_HOST port=$DB_PORT user=$DB_USER db=$DB_NAME\n"
+DB_NAME=${PGDB_NAME:-""}
+DB_SCHEMA=${PGSCHEMA:-""}
 
 #Acá comienza el código
-
 #Agregar a futuro que sea multi schema
 SCHEMA="public"
 
@@ -38,8 +37,10 @@ TABLES=$(PGPASSWORD="$DB_PASSWORD" "$PSQL_PATH" \
 )
 
 #Crear carpeta de los componentes de las tablas
-TABLES_PATH="../projects/$DB_NAME/components/tables" 
+TABLES_PATH="../../projects/$DB_NAME/components/tables" 
 mkdir -p "$TABLES_PATH"
+
+echo -e "🏗️ Construyendo archivos para tablas..."
 
 for table in $TABLES; do
     #Creación del archivo para la tabla
@@ -229,6 +230,8 @@ COMMENT
 
       echo "COMMENT ON COLUMN $SCHEMA.$TABLENAME.$(echo "${COMMENTS_PARAMS[0]}" | xargs) IS '$(echo "${COMMENTS_PARAMS[1]}" | xargs)';" >> "$TABLES_PATH/$TABLENAME.sql"
     done <<< "$COMMENTS_COMPOSITION"
+
+    echo -e "🧩 $TABLENAME -> CREADO"
 
 done
 

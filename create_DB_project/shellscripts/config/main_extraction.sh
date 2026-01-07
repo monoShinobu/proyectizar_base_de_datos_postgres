@@ -2,13 +2,8 @@
 
 source "$(dirname "$0")/config_env.sh"
 
-DB_NAME=${PGDB_NAME:-$DB_NAME}
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+source "$BASE_DIR/extraction/table_extraction.sh"
+source "$BASE_DIR/extraction/functions_extraction.sh"
 
-echo "📊 Extracción de tablas en proceso"
-cd ..
-./extraction/table_extraction.sh
-./extraction/functions_extraction.sh
-
-
-#echo "Script hijo terminó, continuando con el principal"

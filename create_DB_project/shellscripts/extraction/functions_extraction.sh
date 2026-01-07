@@ -1,17 +1,15 @@
 #!/bin/bash
 
-source "$(dirname "$-1")/config/config_env.sh"
+#source "$(dirname "$-1")/config/config_env.sh"
 
 # Usar variables de Bitbucket Pipelines si están disponibles
-DB_USER=${PGUSER:-$DB_USER}
-DB_PASSWORD=${PGPASSWORD:-$DB_PASSWORD}
-DB_HOST=${PGHOST:-$DB_HOST}
-DB_PORT=${PGPORT:-$DB_PORT}
+DB_USER=${PGUSER:-""}
+DB_PASSWORD=${PGPASSWORD:-""}
+DB_HOST=${PGHOST:-""}
+DB_PORT=${PGPORT:-""}
 
-DB_NAME=${PGDB_NAME:-$DB_NAME}
-DB_SCHEMA=${PGSCHEMA:-$DB_SCHEMA}
-
-echo -e "ℹ️ Usando conexión: host=$DB_HOST port=$DB_PORT user=$DB_USER db=$DB_NAME\n"
+DB_NAME=${PGDB_NAME:-""}
+DB_SCHEMA=${PGSCHEMA:-""}
 
 #Acá comienza el código
 FUNCTIONS_NAME=$(PGPASSWORD="$DB_PASSWORD" "$PSQL_PATH" \
@@ -35,18 +33,15 @@ FUNCTIONS_NAME=$(PGPASSWORD="$DB_PASSWORD" "$PSQL_PATH" \
             schema_name, function_name;"
 )
 
-echo -e "$FUNCTIONS_NAME\n"
-
-
 FUNCTIONS_PATH="../projects/$DB_NAME/components/functions" 
 mkdir -p "$FUNCTIONS_PATH"
+
+echo -e "🛠️ Construyendo archivos para funciones..."
 
 for function in $FUNCTIONS_NAME; do
     IFS="|" read -ra FUNC_NAMES <<< "$function"
     FUNC_NAME=$(echo "${FUNC_NAMES[1]}" | xargs) 
     
-    echo -e "FUNC_NAME = $FUNC_NAME"
-
     FUNCTIONS_STRUCTURE=$(PGPASSWORD="$DB_PASSWORD" "$PSQL_PATH" \
         -h "$DB_HOST" \
         -p "$DB_PORT" \
@@ -64,6 +59,8 @@ for function in $FUNCTIONS_NAME; do
     )
 
     printf "%s\n " "$FUNCTIONS_STRUCTURE" | tr -d '\r' | sed -e '/^\$function\$$/ { N; s/\$function\$\n/\$function\$\n;\n/ }' > "$FUNCTIONS_PATH/$FUNC_NAME.sql"
+
+    echo -e "⬇️ $FUNC_NAME -> CREADO"
 done
 
 shopt -u nullglob  # buena practica: dejar la shell como estaba
